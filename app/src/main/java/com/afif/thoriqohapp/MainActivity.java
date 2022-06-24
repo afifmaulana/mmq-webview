@@ -1,14 +1,20 @@
 package com.afif.thoriqohapp;
 
+import android.app.DownloadManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
+import android.webkit.CookieManager;
+import android.webkit.DownloadListener;
+import android.webkit.URLUtil;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,8 +31,31 @@ public class MainActivity extends AppCompatActivity {
         bar=(ProgressBar) findViewById(R.id.progressBar1);
         webView.setWebViewClient(new myWebclient());
         webView.getSettings().setJavaScriptEnabled(true);
-        webView.loadUrl("https://mmq-pakijangan.com/");
+        webView.loadUrl("https://stock-system.omyraglobal.com/");
         webView.getSettings().setDomStorageEnabled(true);
+
+        webView.setDownloadListener(new DownloadListener() {
+            @Override
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long length) {
+                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                request.setMimeType(mimeType);
+                String cookies = CookieManager.getInstance().getCookie(url);
+                request.addRequestHeader("cookie", cookies);
+                request.addRequestHeader("User-Agent", userAgent);
+                request.setDescription("Downloading File...");
+                request.setTitle(URLUtil.guessFileName(url, contentDisposition, userAgent));
+                request.allowScanningByMediaScanner();
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(
+                                url, contentDisposition, mimeType));
+
+                DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                manager.enqueue(request);
+
+                Toast.makeText(getApplicationContext(), "Sedang Unduh File..", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public class myWebclient extends WebViewClient{
@@ -53,15 +82,15 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
 
         new AlertDialog.Builder(this)
-                .setMessage("Are you sure you want to exit?")
+                .setMessage("Anda Yakin Ingin Keluar Aplikasi?")
                 .setIcon(R.mipmap.ic_launcher)
                 .setCancelable(false)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Ya", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         MainActivity.this.finish();
                     }
                 })
-                .setNegativeButton("No", null)
+                .setNegativeButton("Tidak", null)
                 .show();
     }
 }
